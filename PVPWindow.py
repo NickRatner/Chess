@@ -41,8 +41,9 @@ class PVPWindow: #Player vs Player
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mx, my = pygame.mouse.get_pos()
                     if mx < 800:  #if the click is on the chess board
-                        if(self.ChessBoard.board[int(mx/100)][ int(my/100)] != 0) and not pieceSelected: #if a chess piece is selected
-                            if (self.ChessBoard.board[int(mx/100)][ int(my/100)].team == 'white' and self.isWhiteTurn) or ((self.ChessBoard.board[int(mx/100)][ int(my/100)].team == 'black' and (not self.isWhiteTurn))):  #checks if the selected piece is the same team as the current turn
+                        if (self.ChessBoard.board[int(mx / 100)][int(my / 100)] != 0):
+
+                            if(self.ChessBoard.board[int(mx/100)][ int(my/100)].team == 'white' and self.isWhiteTurn) or ((self.ChessBoard.board[int(mx/100)][ int(my/100)].team == 'black' and (not self.isWhiteTurn))): #if a chess piece is selected, and if the selected piece is the same team as the current turn
                                 if pieceSelected == False: #if a chess piece was not already selected
                                     pieceSelected = True
                                     self.displayAvailableMovements(gameWindow, self.ChessBoard.board[int(mx/100)][ int(my/100)], (int(mx/100),int(my/100)))
@@ -57,13 +58,23 @@ class PVPWindow: #Player vs Player
 
                         elif pieceSelected:  #if a piece is selected, and then one of its possible moves is clicked, move the peice
                             if (int(mx/100), int(my/100)) in self.ChessBoard.determinePossibleMoves(self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)], (int(previousMX/100),int(previousMY/100))):   #if a piece is currently selected and one of its avaialbe moves is clicked
-                                self.ChessBoard.board[int(mx/100)][int(my/100)] = self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)]
-                                self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)] = 0
+                                self.ChessBoard.board[int(mx/100)][int(my/100)] = self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)]  #move the piece to a new spot
+                                self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)] = 0  #set the piece's old spot to empty (0)
 
-                                self.isWhiteTurn = not self.isWhiteTurn  #switches turn when a move is made
+                                self.changeTurn()  #switches turn when a move is made
                                 pieceSelected = False
                                 self.drawBoard(gameWindow)
 
+                        if (self.ChessBoard.board[int(mx/100)][int(my/100)] != 0) and (self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)] != 0):
+                            if pieceSelected and (self.ChessBoard.board[int(mx / 100)][int(my / 100)].team == 'white' and (not self.isWhiteTurn)) or ((self.ChessBoard.board[int(mx / 100)][int(my / 100)].team == 'black' and self.isWhiteTurn)):   #if the piece clicked is the opposite team of the piece selected
+                                if (int(mx / 100), int(my / 100)) in self.ChessBoard.determinePossibleMoves(self.ChessBoard.board[int(previousMX / 100)][int(previousMY / 100)],(int(previousMX / 100), int(previousMY / 100))): #if a piece is selected and one of its available moves is clicked
+
+                                    self.ChessBoard.board[int(mx / 100)][int(my / 100)] = self.ChessBoard.board[int(previousMX / 100)][int(previousMY / 100)] #moves the piece to a new spot
+                                    self.ChessBoard.board[int(previousMX / 100)][int(previousMY / 100)] = 0  # set the piece's old spot to empty (0)
+
+                                    self.changeTurn()  #switches turns
+                                    pieceSelected = False
+                                    self.drawBoard(gameWindow)
 
                         if(self.ChessBoard.board[int(mx/100)][ int(my/100)] != 0):  #if a piece is clicked
                             previousMX = mx
@@ -145,3 +156,6 @@ class PVPWindow: #Player vs Player
         for location in self.ChessBoard.determinePossibleMoves(piece, coordinate): #This will return a list of all coordinates where a move is possible
             gameWindow.blit(self.circleImage, (location[0]*100, location[1]*100))
 
+
+    def changeTurn(self):
+        self.isWhiteTurn = not self.isWhiteTurn
