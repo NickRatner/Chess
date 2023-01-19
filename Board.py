@@ -46,6 +46,14 @@ class Board:
 
 
 
+    def determinePossibleCaputures(self, piece, coordinate):
+        result = []
+        for location in self.determinePossibleMoves(piece, coordinate):
+            if self.board[location[0]][location[1]] != 0:
+                result.append((location[0],location[1]))
+        return result
+
+
     def determinePossibleMoves(self, piece, coordinate): #return a list of tuples (coordinates) with all possible moves a piece can make
         result = []
 

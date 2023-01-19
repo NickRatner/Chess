@@ -1,12 +1,14 @@
 import pygame
 import Board
+import PySimpleGUI as sg
 
 
 class PVPWindow: #Player vs Player
 
     def __init__(self):
-        self.ChessBoard = Board.Board()  #note! for now all the coordinates are NOT multiplied by 100 to be scaled properly
+        self.ChessBoard = Board.Board()
         self.circleImage = pygame.image.load('Images/greenCircle-rbg.png')
+        self.redCircleImage = pygame.image.load('Images/redCircle-rbg.png')
         self.isWhiteTurn = True
         self.create()
 
@@ -38,6 +40,7 @@ class PVPWindow: #Player vs Player
             for event in pygame.event.get(): #exits game loop when window is closed
                 if event.type == pygame.QUIT:
                     running = False
+                    pygame.quit()
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mx, my = pygame.mouse.get_pos()
                     if mx < 800:  #if the click is on the chess board
@@ -81,9 +84,16 @@ class PVPWindow: #Player vs Player
                             previousMY = my
 
                     else:
-                        pass #write menu button click code here
+                        if mx > 875 and mx < 1025:  #a button is pressed (this checks x coordinate)
+                            if my > 675 and my < 750: #reset game button is pressed (this checks y coordinate)
+                                self.resetGame()   #CAUSES ERROR, FIX
+
+                            if my > 525 and my < 600:  #surrender button is pressed
+                                self.surrender()
 
 
+                            if my > 375 and my < 450:  #undo move button pressed
+                                print('undo move button pressed!')
 
             pygame.display.update()  #update all visuals
 
@@ -156,6 +166,47 @@ class PVPWindow: #Player vs Player
         for location in self.ChessBoard.determinePossibleMoves(piece, coordinate): #This will return a list of all coordinates where a move is possible
             gameWindow.blit(self.circleImage, (location[0]*100, location[1]*100))
 
+        for location in self.ChessBoard.determinePossibleCaputures(piece, coordinate): #This will return a list of all coordinates where a move is possible
+            gameWindow.blit(self.redCircleImage, (location[0]*100, location[1]*100))
+
 
     def changeTurn(self):
         self.isWhiteTurn = not self.isWhiteTurn
+
+    def resetGame(self):
+        self.__init__()
+
+    def surrender(self):
+        self.endGame()
+
+
+    def endGame(self):
+        sg.theme("LightGreen4")
+
+        if self.isWhiteTurn:  #this means black made the last move, hence black wins
+            winner = "Black"
+        else:
+            winner = 'White'
+
+        layout = [
+            [sg.Text("Game Over!")],
+            [sg.Text('Winner: ' + winner)],
+            [sg.Button("Play Again")],
+            [sg.Button("Exit")]   #EXIT BUTTON DOES NOT WORK
+        ]
+
+        gameOverScreen = sg.Window("Chess", layout, size=(500, 300), margins=(0, 75), element_justification="center")
+
+        while True:
+            event, values = gameOverScreen.read()
+
+            if event == "Exit" or event == sg.WIN_CLOSED:
+                gameOverScreen.close()
+                pygame.quit()
+                print('Exiting!')
+                break
+
+            if event == "Play Again":
+                gameOverScreen.close()
+                self.resetGame()
+                break
