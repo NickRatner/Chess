@@ -53,7 +53,6 @@ class PVPWindow: #Player vs Player
 
                     elif pieceSelected:  #if a piece is selected, and then one of its possible moves is clicked, move the peice, Note: add turn checking
                         if (int(mx/100), int(my/100)) in self.ChessBoard.determinePossibleMoves(self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)], (int(previousMX/100),int(previousMY/100))):   #if a piece is currently selected and one of its avaialbe moves is clicked
-                            print("Time to move!")
                             self.ChessBoard.board[int(mx/100)][int(my/100)] = self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)]
                             self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)] = 0
 
