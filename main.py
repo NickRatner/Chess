@@ -2,7 +2,6 @@ import PySimpleGUI as sg
 import PVPWindow
 import PVEWindow
 import ChessPiece
-
 if __name__ == '__main__':
 
     sg.theme("LightGreen4")
@@ -22,8 +21,8 @@ if __name__ == '__main__':
         if event == "Exit" or event == sg.WIN_CLOSED:
             break
 
-        if event == "Player VS Player" or event == sg.WIN_CLOSED:
+        if event == "Player VS Player":
             PVP = PVPWindow.PVPWindow()
 
-        if event == "Player VS Computer" or event == sg.WIN_CLOSED:
+        if event == "Player VS Computer":
             PVE = PVEWindow.PVEWindow()

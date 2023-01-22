@@ -1,26 +1,30 @@
 import pygame
 import Board
 import PySimpleGUI as sg
-
+from copy import deepcopy
 
 class PVPWindow: #Player vs Player
 
     def __init__(self):
+        pygame.display.init()
+        if not pygame.get_init():
+            pygame.init()
         self.ChessBoard = Board.Board()
         self.circleImage = pygame.image.load('Images/greenCircle-rbg.png')
         self.redCircleImage = pygame.image.load('Images/redCircle-rbg.png')
         self.isWhiteTurn = True
+
+        #tempBoard = self.ChessBoard.board.copy()
+        self.states = []
+        self.states.append(deepcopy(self.ChessBoard.board))
+
         self.create()
 
 
     def create(self):
-
         pieceSelected = False
         previousMX = 0
         previousMY = 0
-
-
-        pygame.init()
 
         icon = pygame.image.load('chessIcon.png')
 
@@ -36,11 +40,10 @@ class PVPWindow: #Player vs Player
 
         running = True
         while running: #game loop
-
             for event in pygame.event.get(): #exits game loop when window is closed
                 if event.type == pygame.QUIT:
                     running = False
-                    pygame.quit()
+                    break
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mx, my = pygame.mouse.get_pos()
                     if mx < 800:  #if the click is on the chess board
@@ -61,12 +64,23 @@ class PVPWindow: #Player vs Player
 
                         elif pieceSelected:  #if a piece is selected, and then one of its possible moves is clicked, move the peice
                             if (int(mx/100), int(my/100)) in self.ChessBoard.determinePossibleMoves(self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)], (int(previousMX/100),int(previousMY/100))):   #if a piece is currently selected and one of its avaialbe moves is clicked
+                                #print(self.states[0])
                                 self.ChessBoard.board[int(mx/100)][int(my/100)] = self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)]  #move the piece to a new spot
                                 self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)] = 0  #set the piece's old spot to empty (0)
 
                                 self.changeTurn()  #switches turn when a move is made
                                 pieceSelected = False
+
+                                if self.ChessBoard.board[int(mx/100)][int(my/100)].type == 'PAWN' and self.ChessBoard.board[int(mx/100)][int(my/100)].team == 'white' and int(my/100) == 0:
+                                    self.ChessBoard.transformPawn((int(mx/100),int(my/100)))
+
+                                elif self.ChessBoard.board[int(mx/100)][int(my/100)].type == 'PAWN' and self.ChessBoard.board[int(mx/100)][int(my/100)].team == 'black' and int(my/100) == 7:
+                                    self.ChessBoard.transformPawn((int(mx/100),int(my/100)))
+
+                                self.states.append(deepcopy(self.ChessBoard.board))  # pushes the current state of the board to the stack
+
                                 self.drawBoard(gameWindow)
+
 
                         if (self.ChessBoard.board[int(mx/100)][int(my/100)] != 0) and (self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)] != 0):
                             if pieceSelected and (self.ChessBoard.board[int(mx / 100)][int(my / 100)].team == 'white' and (not self.isWhiteTurn)) or ((self.ChessBoard.board[int(mx / 100)][int(my / 100)].team == 'black' and self.isWhiteTurn)):   #if the piece clicked is the opposite team of the piece selected
@@ -77,6 +91,20 @@ class PVPWindow: #Player vs Player
 
                                     self.changeTurn()  #switches turns
                                     pieceSelected = False
+
+                                    if self.ChessBoard.board[int(mx / 100)][int(my / 100)].type == 'PAWN' and \
+                                            self.ChessBoard.board[int(mx / 100)][int(my / 100)].team == 'white' and int(
+                                            my / 100) == 0:
+                                        self.ChessBoard.transformPawn((int(mx / 100), int(my / 100)))
+
+                                    elif self.ChessBoard.board[int(mx / 100)][int(my / 100)].type == 'PAWN' and \
+                                            self.ChessBoard.board[int(mx / 100)][int(my / 100)].team == 'black' and int(
+                                            my / 100) == 7:
+                                        self.ChessBoard.transformPawn((int(mx / 100), int(my / 100)))
+
+
+                                    self.states.append(deepcopy(self.ChessBoard.board))  # pushes the current state of the board to the stack
+
                                     self.drawBoard(gameWindow)
 
                         if(self.ChessBoard.board[int(mx/100)][ int(my/100)] != 0):  #if a piece is clicked
@@ -87,17 +115,17 @@ class PVPWindow: #Player vs Player
                         if mx > 875 and mx < 1025:  #a button is pressed (this checks x coordinate)
                             if my > 675 and my < 750: #reset game button is pressed (this checks y coordinate)
                                 self.resetGame()   #CAUSES ERROR, FIX
-
+                                running = False
                             if my > 525 and my < 600:  #surrender button is pressed
                                 self.surrender()
+                                running = False
 
 
                             if my > 375 and my < 450:  #undo move button pressed
-                                print('undo move button pressed!')
-
-            pygame.display.update()  #update all visuals
-
-        pygame.quit()
+                                self.undoMove(gameWindow)
+            if running:
+                pygame.display.update()  #update all visuals
+        pygame.display.quit()
 
 
     def drawBoard(self, gameWindow):
@@ -113,7 +141,7 @@ class PVPWindow: #Player vs Player
         pygame.draw.rect(gameWindow, (106, 121, 248), (875, 100, 150, 75), 250 ,3) #draws Turn Indicator
         pygame.draw.rect(gameWindow, (106, 121, 248), (875, 375, 150, 75), 250 ,3)  # draws Undo Move button
         pygame.draw.rect(gameWindow, (106, 121, 248), (875, 525, 150, 75), 250 ,3)  # draws Surrender button
-        pygame.draw.rect(gameWindow, (106, 121, 248), (875, 675, 150, 75), 250 ,3)  # draws Reset Game button
+        pygame.draw.rect(gameWindow, (106, 121, 248), (875, 675, 150, 75), 250 ,3)  # draws undo Game button
 
         font = pygame.font.Font('freesansbold.ttf', 20)  #creating the text for the buttons
 
@@ -154,11 +182,39 @@ class PVPWindow: #Player vs Player
                     if j % 2 != 0:
                         pygame.draw.rect(gameWindow, (225, 198, 153), (j * 100, i * 100, 100, 100))
 
-
         for i in range(8): #this loop draws all the chess pieces
             for j in range(8):
                 if self.ChessBoard.board[j][i] != 0:
-                    gameWindow.blit(self.ChessBoard.board[j][i].image, (j * 100, i * 100))
+
+                    if self.ChessBoard.board[j][i].team == "white":
+                        if self.ChessBoard.board[j][i].type == "PAWN":
+                            image = pygame.image.load('Images/WhitePawnIcon-rbg.png')
+                        elif self.ChessBoard.board[j][i].type == "BISHOP":
+                            image = pygame.image.load('Images/WhiteBishopIcon-rbg.png')
+                        elif self.ChessBoard.board[j][i].type == "KNIGHT":
+                            image = pygame.image.load('Images/WhiteKnightIcon-rbg.png')
+                        elif self.ChessBoard.board[j][i].type == "ROOK":
+                            image = pygame.image.load('Images/WhiteRookIcon-rbg.png')
+                        elif self.ChessBoard.board[j][i].type == "QUEEN":
+                            image = pygame.image.load('Images/WhiteQueenIcon-rbg.png')
+                        elif self.ChessBoard.board[j][i].type == "KING":
+                            image = pygame.image.load('Images/WhiteKingIcon-rbg.png')
+
+                    if self.ChessBoard.board[j][i].team == "black":
+                        if self.ChessBoard.board[j][i].type == "PAWN":
+                            image = pygame.image.load('Images/BlackPawnIcon-rbg.png')
+                        elif self.ChessBoard.board[j][i].type == "BISHOP":
+                            image = pygame.image.load('Images/BlackBishopIcon-rbg.png')
+                        elif self.ChessBoard.board[j][i].type == "KNIGHT":
+                            image = pygame.image.load('Images/BlackKnightIcon-rbg.png')
+                        elif self.ChessBoard.board[j][i].type == "ROOK":
+                            image = pygame.image.load('Images/BlackRookIcon-rbg.png')
+                        elif self.ChessBoard.board[j][i].type == "QUEEN":
+                            image = pygame.image.load('Images/BlackQueenIcon-rbg.png')
+                        elif self.ChessBoard.board[j][i].type == "KING":
+                            image = pygame.image.load('Images/BlackKingIcon-rbg.png')
+
+                    gameWindow.blit(image, (j * 100, i * 100))
 
 
     def displayAvailableMovements(self, gameWindow, piece, coordinate):
@@ -178,6 +234,20 @@ class PVPWindow: #Player vs Player
 
     def surrender(self):
         self.endGame()
+
+    def undoMove(self, gameWindow):
+
+        if len(self.states) > 1:  #if there is a move to undo
+            self.changeTurn()
+            self.states.pop(-1)   #pops the last state of the board
+
+        for i in self.states:
+            print(i)
+            print('==============================')
+
+        self.ChessBoard.board = self.states[-1]  #sets the state of the board to the new most recent state
+
+        self.drawBoard(gameWindow)   #redraws (updates) the board
 
 
     def endGame(self):
@@ -203,7 +273,7 @@ class PVPWindow: #Player vs Player
             if event == "Exit" or event == sg.WIN_CLOSED:
                 gameOverScreen.close()
                 pygame.quit()
-                print('Exiting!')
+
                 break
 
             if event == "Play Again":

@@ -1,8 +1,11 @@
 import ChessPiece
+import copy
 
 class Board:
 
     def __init__(self):
+        self.originalTeam = None
+
         self.board = [[0 for i in range(8)] for j in range(8)]
 
         self.board[0][1] = ChessPiece.ChessPiece("PAWN", "black")
@@ -59,32 +62,57 @@ class Board:
 
         if piece.type == "PAWN":
             if piece.team == "white":
-                if self.board[coordinate[0]][coordinate[1] - 1] == 0: #if space above pawn is free
-                    result.append((coordinate[0], coordinate[1] - 1))
+                try:
+                    if self.board[coordinate[0]][coordinate[1] - 1] == 0: #if space above pawn is free
+                        result.append((coordinate[0], coordinate[1] - 1))
+                except:
+                    pass
+                try:
+                    if coordinate[0] != 0: #check if pawn is in the leftmost column
+                        if self.board[coordinate[0] - 1][coordinate[1] - 1] != 0:  # check that 1 up and 1 left is a piece
+                            if self.board[coordinate[0] - 1][coordinate[1] - 1].team == "black": #if space 1 up and 1 left is has an enemy piece
+                                result.append((coordinate[0] - 1, coordinate[1] - 1))
+                except:
+                    pass
+                try:
+                    if coordinate[0] != 7: #check if pawn is in the rightmost column
+                        if self.board[coordinate[0] + 1][coordinate[1] - 1] != 0:  # check that 1 up and 1 right is a piece
+                            if self.board[coordinate[0] + 1][coordinate[1] - 1].team == "black": #if space 1 up and 1 right is has an enemy piece
+                                result.append((coordinate[0] + 1, coordinate[1] - 1))
+                except:
+                    pass
 
-                if coordinate[0] != 0: #check if pawn is in the leftmost column
-                    if self.board[coordinate[0] - 1][coordinate[1] - 1] != 0:  # check that 1 up and 1 left is a piece
-                        if self.board[coordinate[0] - 1][coordinate[1] - 1].team == "black": #if space 1 up and 1 left is has an enemy piece
-                            result.append((coordinate[0] - 1, coordinate[1] - 1))
+                if coordinate[1] == 6:
+                    if self.board[coordinate[0]][coordinate[1] - 2] == 0:  # if space above pawn is free
+                        result.append((coordinate[0], coordinate[1] - 2))
+                    piece.hasMoved = True
 
-                if coordinate[0] != 7: #check if pawn is in the rightmost column
-                    if self.board[coordinate[0] + 1][coordinate[1] - 1] != 0:  # check that 1 up and 1 right is a piece
-                        if self.board[coordinate[0] + 1][coordinate[1] - 1].team == "black": #if space 1 up and 1 right is has an enemy piece
-                            result.append((coordinate[0] + 1, coordinate[1] - 1))
+
             elif piece.team == "black":
-                if self.board[coordinate[0]][coordinate[1] + 1] == 0: #if space below pawn is free
-                    result.append((coordinate[0], coordinate[1] + 1))
+                try:
+                    if self.board[coordinate[0]][coordinate[1] + 1] == 0: #if space below pawn is free
+                        result.append((coordinate[0], coordinate[1] + 1))
+                except:
+                    pass
+                try:
+                    if coordinate[0] != 0: #check if pawn is in the leftmost column
+                        if self.board[coordinate[0] - 1][coordinate[1] + 1] != 0:  # check that 1 up and 1 left is a piece
+                            if self.board[coordinate[0] - 1][coordinate[1] + 1].team == "white": #if space 1 up and 1 left is has an enemy piece
+                                result.append((coordinate[0] - 1, coordinate[1] + 1))
+                except:
+                    pass
+                try:
+                    if coordinate[0] != 7: #check if pawn is in the rightmost column
+                        if self.board[coordinate[0] + 1][coordinate[1] + 1] != 0:  # check that 1 up and 1 right is a piece
+                            if self.board[coordinate[0] + 1][coordinate[1] + 1].team == "white": #if space 1 up and 1 right is has an enemy piece
+                                result.append((coordinate[0] + 1, coordinate[1] + 1))
+                except:
+                    pass
 
-                if coordinate[0] != 0: #check if pawn is in the leftmost column
-                    if self.board[coordinate[0] - 1][coordinate[1] + 1] != 0:  # check that 1 up and 1 left is a piece
-                        if self.board[coordinate[0] - 1][coordinate[1] + 1].team == "white": #if space 1 up and 1 left is has an enemy piece
-                            result.append((coordinate[0] - 1, coordinate[1] + 1))
-
-                if coordinate[0] != 7: #check if pawn is in the rightmost column
-                    if self.board[coordinate[0] + 1][coordinate[1] + 1] != 0:  # check that 1 up and 1 right is a piece
-                        if self.board[coordinate[0] + 1][coordinate[1] + 1].team == "white": #if space 1 up and 1 right is has an enemy piece
-                            result.append((coordinate[0] + 1, coordinate[1] + 1))
-
+                if coordinate[1] == 1:
+                    if self.board[coordinate[0]][coordinate[1] + 2] == 0:  # if space above pawn is free
+                        result.append((coordinate[0], coordinate[1] + 2))
+                    piece.hasMoved = True
 
 
         elif piece.type == "BISHOP":
@@ -306,7 +334,7 @@ class Board:
                     else:
                         break
 
-                for i in range(coordinate[1] - 1,0,-1):  #going up
+                for i in range(coordinate[1] - 1,-1,-1):  #going up
                     if self.board[coordinate[0]][i] == 0:
                         result.append((coordinate[0],i))
                     elif self.board[coordinate[0]][i].team == "black":
@@ -344,7 +372,7 @@ class Board:
                     else:
                         break
 
-                for i in range(coordinate[1] - 1,0,-1):  #going up
+                for i in range(coordinate[1] - 1,-1,-1):  #going up
                     if self.board[coordinate[0]][i] == 0:
                         result.append((coordinate[0],i))
                     elif self.board[coordinate[0]][i].team == "white":
@@ -388,8 +416,57 @@ class Board:
                         except:
                             pass
 
+
         return result
+
+
 
     def printBoard(self):
         for i in range(8):
-            print(self.board[i])
+            for j in range(8):
+                print(self.board[j][i], end='')
+            print()
+
+    def transformPawn(self, coordinate):
+        print("A pawn has reached the end!")
+        print('coordinate: (' + str(coordinate[0]) + ',' + str(coordinate[1]) + ')')
+
+    def isKingInCheck(self, team, tempBoard):
+
+        #first find the coordinate of the king, of the given color
+        coordinate = ()
+
+        if team == "white":
+            for i in range(8):
+                for j in range(8):
+                    if tempBoard[i][j] != 0:
+                        if tempBoard[i][j].team == 'white' and tempBoard[i][j].type == 'KING':
+                            coordinate = (i,j)
+                            break
+
+            for i in range(8):
+                for j in range(8):
+                    if tempBoard[i][j] != 0:
+                        if tempBoard[i][j].team == 'black':
+                            if coordinate in self.determinePossibleMoves(tempBoard[i][j], (i,j)):
+                                return True
+
+
+        elif team == "black":
+            for i in range(8):
+                for j in range(8):
+                    if tempBoard[i][j] != 0:
+                        if tempBoard[i][j].team == 'black' and tempBoard[i][j].type == 'KING':
+                            coordinate = (i,j)
+                            break
+
+            for i in range(8):
+                for j in range(8):
+                    if tempBoard[i][j] != 0:
+                        if tempBoard[i][j].team == 'white':
+                            if coordinate in self.determinePossibleMoves(tempBoard[i][j], (i,j)):
+                                return True
+
+        return False
+
+
