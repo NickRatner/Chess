@@ -57,7 +57,7 @@ class Board:
         return result
 
 
-    def determinePossibleMoves(self, piece, coordinate): #return a list of tuples (coordinates) with all possible moves a piece can make
+    def determinePossibleMoves(self, piece, coordinate, mode = 0): #return a list of tuples (coordinates) with all possible moves a piece can make
         result = []
 
         if piece.type == "PAWN":
@@ -416,10 +416,20 @@ class Board:
                         except:
                             pass
 
+        if mode == 0:
+            finalResult = []
+            for x in result:
+                tempBoard = copy.deepcopy(self)
+
+                tempBoard.board[x[0]][x[1]] = piece
+                tempBoard.board[coordinate[0]][coordinate[1]] = 0
+
+                if not tempBoard.isKingInCheck(piece.team):
+                    finalResult.append(x)
+
+            return finalResult
 
         return result
-
-
 
     def printBoard(self):
         for i in range(8):
@@ -431,7 +441,7 @@ class Board:
         print("A pawn has reached the end!")
         print('coordinate: (' + str(coordinate[0]) + ',' + str(coordinate[1]) + ')')
 
-    def isKingInCheck(self, team, tempBoard):
+    def isKingInCheck(self, team):
 
         #first find the coordinate of the king, of the given color
         coordinate = ()
@@ -439,34 +449,44 @@ class Board:
         if team == "white":
             for i in range(8):
                 for j in range(8):
-                    if tempBoard[i][j] != 0:
-                        if tempBoard[i][j].team == 'white' and tempBoard[i][j].type == 'KING':
+                    if self.board[i][j] != 0:
+                        if self.board[i][j].team == 'white' and self.board[i][j].type == 'KING':
                             coordinate = (i,j)
                             break
 
             for i in range(8):
                 for j in range(8):
-                    if tempBoard[i][j] != 0:
-                        if tempBoard[i][j].team == 'black':
-                            if coordinate in self.determinePossibleMoves(tempBoard[i][j], (i,j)):
+                    if self.board[i][j] != 0:
+                        if self.board[i][j].team == 'black':
+                            if coordinate in self.determinePossibleMoves(self.board[i][j], (i,j), 1):
                                 return True
 
 
         elif team == "black":
             for i in range(8):
                 for j in range(8):
-                    if tempBoard[i][j] != 0:
-                        if tempBoard[i][j].team == 'black' and tempBoard[i][j].type == 'KING':
+                    if self.board[i][j] != 0:
+                        if self.board[i][j].team == 'black' and self.board[i][j].type == 'KING':
                             coordinate = (i,j)
                             break
 
             for i in range(8):
                 for j in range(8):
-                    if tempBoard[i][j] != 0:
-                        if tempBoard[i][j].team == 'white':
-                            if coordinate in self.determinePossibleMoves(tempBoard[i][j], (i,j)):
+                    if self.board[i][j] != 0:
+                        if self.board[i][j].team == 'white':
+                            if coordinate in self.determinePossibleMoves(self.board[i][j], (i,j), 1):
                                 return True
 
         return False
 
 
+    def isMated(self, team):  #returns true if the given team has been check mated
+
+        for i in range(8):
+            for j in range(8):
+                if self.board[i][j] != 0:
+                    if self.board[i][j].team == team:
+                        if self.determinePossibleMoves(self.board[i][j],(i,j)):
+                            return False
+
+        return True

@@ -72,14 +72,24 @@ class PVPWindow: #Player vs Player
                                 pieceSelected = False
 
                                 if self.ChessBoard.board[int(mx/100)][int(my/100)].type == 'PAWN' and self.ChessBoard.board[int(mx/100)][int(my/100)].team == 'white' and int(my/100) == 0:
-                                    self.ChessBoard.transformPawn((int(mx/100),int(my/100)))
+                                    self.ChessBoard.transformPawn((int(mx/100),int(my/100)))  #transforms white pawns when they reach the end
 
                                 elif self.ChessBoard.board[int(mx/100)][int(my/100)].type == 'PAWN' and self.ChessBoard.board[int(mx/100)][int(my/100)].team == 'black' and int(my/100) == 7:
-                                    self.ChessBoard.transformPawn((int(mx/100),int(my/100)))
+                                    self.ChessBoard.transformPawn((int(mx/100),int(my/100)))  #transforms black pawns when they reach the end
 
                                 self.states.append(deepcopy(self.ChessBoard.board))  # pushes the current state of the board to the stack
 
                                 self.drawBoard(gameWindow)
+
+                                if self.isWhiteTurn:
+                                    tempTeam = 'white'
+                                    otherTeam = 'black'
+                                else:
+                                    tempTeam = 'black'
+                                    otherTeam = 'white'
+                                if(self.ChessBoard.isMated(tempTeam)):   #After a move is made, checks if it puts the enemy king in checkmate
+                                    #print("Game Over! Winner: " + otherTeam)
+                                    self.endGame()   #THERE IS AN ISSUE WITH THIS LINE (IT CRASHES AFTER BEING CLOSED) pretty sure its the same issue as before, add running = false
 
 
                         if (self.ChessBoard.board[int(mx/100)][int(my/100)] != 0) and (self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)] != 0):
@@ -272,7 +282,7 @@ class PVPWindow: #Player vs Player
 
             if event == "Exit" or event == sg.WIN_CLOSED:
                 gameOverScreen.close()
-                pygame.quit()
+                #pygame.display.quit()
 
                 break
 
