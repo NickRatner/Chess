@@ -12,7 +12,12 @@ class PVPWindow: #Player vs Player
         self.ChessBoard = Board.Board()
         self.circleImage = pygame.image.load('Images/greenCircle-rbg.png')
         self.redCircleImage = pygame.image.load('Images/redCircle-rbg.png')
+        self.movePieceSFX = pygame.mixer.Sound('SFX/MovePieceSFX.wav')
+        self.pieceEatSFX = pygame.mixer.Sound('SFX/pieceEatSFX.wav')
+        self.victorySFX = pygame.mixer.Sound('SFX/VictorySFX.mp3')
+        pygame.mixer.music.load('SFX/Golden Wind.mp3')
         self.isWhiteTurn = True
+        self.isMusicPaused = False
 
         #tempBoard = self.ChessBoard.board.copy()
         self.states = []
@@ -22,6 +27,8 @@ class PVPWindow: #Player vs Player
 
 
     def create(self):
+        pygame.mixer.music.set_volume(0.05)
+        pygame.mixer.music.play(loops= -1)
         pieceSelected = False
         previousMX = 0
         previousMY = 0
@@ -68,6 +75,7 @@ class PVPWindow: #Player vs Player
                                 self.ChessBoard.board[int(mx/100)][int(my/100)] = self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)]  #move the piece to a new spot
                                 self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)] = 0  #set the piece's old spot to empty (0)
 
+                                self.movePieceSFX.play()  #play move SFX
                                 self.changeTurn()  #switches turn when a move is made
                                 pieceSelected = False
 
@@ -88,8 +96,8 @@ class PVPWindow: #Player vs Player
                                     tempTeam = 'black'
                                     otherTeam = 'white'
                                 if(self.ChessBoard.isMated(tempTeam)):   #After a move is made, checks if it puts the enemy king in checkmate
-                                    #print("Game Over! Winner: " + otherTeam)
-                                    self.endGame()   #THERE IS AN ISSUE WITH THIS LINE (IT CRASHES AFTER BEING CLOSED) pretty sure its the same issue as before, add running = false
+                                    self.victorySFX.play()
+                                    self.endGame()   #ISSUE: PRESSING QUIT IN THIS WINDOW DOESNT CLOSE THE CHESS GAME
 
 
                         if (self.ChessBoard.board[int(mx/100)][int(my/100)] != 0) and (self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)] != 0):
@@ -99,6 +107,7 @@ class PVPWindow: #Player vs Player
                                     self.ChessBoard.board[int(mx / 100)][int(my / 100)] = self.ChessBoard.board[int(previousMX / 100)][int(previousMY / 100)] #moves the piece to a new spot
                                     self.ChessBoard.board[int(previousMX / 100)][int(previousMY / 100)] = 0  # set the piece's old spot to empty (0)
 
+                                    self.pieceEatSFX.play()
                                     self.changeTurn()  #switches turns
                                     pieceSelected = False
 
@@ -117,6 +126,16 @@ class PVPWindow: #Player vs Player
 
                                     self.drawBoard(gameWindow)
 
+                                    if self.isWhiteTurn:
+                                        tempTeam = 'white'
+                                        otherTeam = 'black'
+                                    else:
+                                        tempTeam = 'black'
+                                        otherTeam = 'white'
+                                    if (self.ChessBoard.isMated(tempTeam)):  # After a move is made, checks if it puts the enemy king in checkmate
+                                        self.victorySFX.play()
+                                        self.endGame()  # ISSUE: PRESSING QUIT IN THIS WINDOW DOESNT CLOSE THE CHESS GAME
+
                         if(self.ChessBoard.board[int(mx/100)][ int(my/100)] != 0):  #if a piece is clicked
                             previousMX = mx
                             previousMY = my
@@ -126,13 +145,22 @@ class PVPWindow: #Player vs Player
                             if my > 675 and my < 750: #reset game button is pressed (this checks y coordinate)
                                 self.resetGame()   #CAUSES ERROR, FIX
                                 running = False
-                            if my > 525 and my < 600:  #surrender button is pressed
+
+                            elif my > 525 and my < 600:  #surrender button is pressed
                                 self.surrender()
                                 running = False
 
-
-                            if my > 375 and my < 450:  #undo move button pressed
+                            elif my > 375 and my < 450:  #undo move button pressed
                                 self.undoMove(gameWindow)
+
+                            elif my > 225 and my < 300: #Play/Pause button pressed
+                                if self.isMusicPaused:
+                                    pygame.mixer.music.unpause()  #play music
+                                    self.isMusicPaused = False
+                                else:
+                                    pygame.mixer.music.pause()  #pause music
+                                    self.isMusicPaused = True
+
             if running:
                 pygame.display.update()  #update all visuals
         pygame.display.quit()
@@ -148,10 +176,11 @@ class PVPWindow: #Player vs Player
         pygame.draw.rect(gameWindow, (242, 214, 205), (800, 0, 300, 800))  #draws the side menu background
         pygame.draw.line(gameWindow, (0,0,0), (800,0), (800,1100), width=5)
 
-        pygame.draw.rect(gameWindow, (106, 121, 248), (875, 100, 150, 75), 250 ,3) #draws Turn Indicator
+        pygame.draw.rect(gameWindow, (106, 121, 248), (875, 75, 150, 75), 250 ,3) #draws Turn Indicator
         pygame.draw.rect(gameWindow, (106, 121, 248), (875, 375, 150, 75), 250 ,3)  # draws Undo Move button
         pygame.draw.rect(gameWindow, (106, 121, 248), (875, 525, 150, 75), 250 ,3)  # draws Surrender button
         pygame.draw.rect(gameWindow, (106, 121, 248), (875, 675, 150, 75), 250 ,3)  # draws undo Game button
+        pygame.draw.rect(gameWindow, (106, 121, 248), (875, 225, 150, 75), 250, 3)  # draws play/pause music button
 
         font = pygame.font.Font('freesansbold.ttf', 20)  #creating the text for the buttons
 
@@ -160,24 +189,28 @@ class PVPWindow: #Player vs Player
         undoMovetext = font.render('Undo Move', True, (255,255,255))
         surrenderText = font.render('Surrender', True, (255,255,255))
         resetGameText = font.render('Reset Game', True, (255,255,255))
+        playPauseMusicText = font.render('Play/Pause', True, (255, 255, 255))
 
         turnIndicatorTextRect = turnIndicatorText.get_rect()
         currentTurnTextRect = turnIndicatorText.get_rect()
         undoMovetextRect = undoMovetext.get_rect()
         surrenderTextRect = surrenderText.get_rect()
         resetGameTextRect = resetGameText.get_rect()
+        playPauseMusicRect = resetGameText.get_rect()
 
-        turnIndicatorTextRect.center = (910 , 137.5)
-        currentTurnTextRect.center = (970, 137.5)
+        turnIndicatorTextRect.center = (910 , 115)
+        currentTurnTextRect.center = (970, 115)
         undoMovetextRect.center = (950 , 412.5)
         surrenderTextRect.center = (950 , 562.5)
         resetGameTextRect.center = (950 , 712.5)
+        playPauseMusicRect.center = (950 , 262.5)
 
         gameWindow.blit(turnIndicatorText, turnIndicatorTextRect)
         gameWindow.blit(currentTurnText, currentTurnTextRect)
         gameWindow.blit(undoMovetext, undoMovetextRect)
         gameWindow.blit(surrenderText, surrenderTextRect)
         gameWindow.blit(resetGameText, resetGameTextRect)
+        gameWindow.blit(playPauseMusicText, playPauseMusicRect)
 
 
 
@@ -261,6 +294,8 @@ class PVPWindow: #Player vs Player
 
 
     def endGame(self):
+        pygame.mixer.music.stop()
+
         sg.theme("LightGreen4")
 
         if self.isWhiteTurn:  #this means black made the last move, hence black wins
