@@ -15,9 +15,10 @@ class PVPWindow: #Player vs Player
         self.movePieceSFX = pygame.mixer.Sound('SFX/MovePieceSFX.wav')
         self.pieceEatSFX = pygame.mixer.Sound('SFX/pieceEatSFX.wav')
         self.victorySFX = pygame.mixer.Sound('SFX/VictorySFX.mp3')
-        pygame.mixer.music.load('SFX/Golden Wind.mp3')
+        pygame.mixer.music.load('SFX/Chess Background Music.mp3')
         self.isWhiteTurn = True
         self.isMusicPaused = False
+        self.isJojosPlaying = False
 
         #tempBoard = self.ChessBoard.board.copy()
         self.states = []
@@ -98,7 +99,16 @@ class PVPWindow: #Player vs Player
                                 if(self.ChessBoard.isMated(tempTeam)):   #After a move is made, checks if it puts the enemy king in checkmate
                                     self.victorySFX.play()
                                     self.endGame()   #ISSUE: PRESSING QUIT IN THIS WINDOW DOESNT CLOSE THE CHESS GAME
-
+                                elif(self.ChessBoard.isKingInCheck(tempTeam)): #if the king is in check, switch music
+                                    pygame.mixer.music.load('SFX/Golden Wind.mp3')
+                                    pygame.mixer.music.set_volume(0.05)
+                                    pygame.mixer.music.play(loops=-1)
+                                    self.isJojosPlaying = True
+                                elif self.isJojosPlaying:
+                                    pygame.mixer.music.load('SFX/Chess Background Music.mp3')
+                                    pygame.mixer.music.set_volume(0.05)
+                                    pygame.mixer.music.play(loops=-1)
+                                    self.isJojosPlaying = False
 
                         if (self.ChessBoard.board[int(mx/100)][int(my/100)] != 0) and (self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)] != 0):
                             if pieceSelected and (self.ChessBoard.board[int(mx / 100)][int(my / 100)].team == 'white' and (not self.isWhiteTurn)) or ((self.ChessBoard.board[int(mx / 100)][int(my / 100)].team == 'black' and self.isWhiteTurn)):   #if the piece clicked is the opposite team of the piece selected
@@ -135,6 +145,16 @@ class PVPWindow: #Player vs Player
                                     if (self.ChessBoard.isMated(tempTeam)):  # After a move is made, checks if it puts the enemy king in checkmate
                                         self.victorySFX.play()
                                         self.endGame()  # ISSUE: PRESSING QUIT IN THIS WINDOW DOESNT CLOSE THE CHESS GAME
+                                    elif (self.ChessBoard.isKingInCheck(tempTeam)):  # if the king is in check, switch music
+                                        pygame.mixer.music.load('SFX/Golden Wind.mp3')
+                                        pygame.mixer.music.set_volume(0.05)
+                                        pygame.mixer.music.play(loops=-1)
+                                        self.isJojosPlaying = True
+                                    elif self.isJojosPlaying:
+                                        pygame.mixer.music.load('SFX/Chess Background Music.mp3')
+                                        pygame.mixer.music.set_volume(0.05)
+                                        pygame.mixer.music.play(loops=-1)
+                                        self.isJojosPlaying = False
 
                         if(self.ChessBoard.board[int(mx/100)][ int(my/100)] != 0):  #if a piece is clicked
                             previousMX = mx
