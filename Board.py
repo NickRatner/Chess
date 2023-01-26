@@ -417,6 +417,12 @@ class Board:
                             pass
 
         if mode == 0:
+
+            tempBoard = copy.deepcopy(self)  #make a temporary board
+            tempBoard.board[coordinate[0]][coordinate[1]] = 0   #remove the piece from the temporary board
+            if piece.type != 'KING' and not tempBoard.isKingInCheck(piece.team):  #this simulates if the piece didn't exist, and checks if the king is in check. If not, no matter where the piece is moved the king won't be in check, therefore there is no need to check all of its moves
+                return result
+
             finalResult = []
             for x in result:
                 tempBoard = copy.deepcopy(self)
