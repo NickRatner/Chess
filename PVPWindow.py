@@ -15,7 +15,9 @@ class PVPWindow: #Player vs Player
         self.movePieceSFX = pygame.mixer.Sound('SFX/MovePieceSFX.wav')
         self.pieceEatSFX = pygame.mixer.Sound('SFX/pieceEatSFX.wav')
         self.victorySFX = pygame.mixer.Sound('SFX/VictorySFX.mp3')
-        pygame.mixer.music.load('SFX/Chess Background Music.mp3')
+        self.bgChannel = pygame.mixer.Channel(1)
+        self.JoJoChannel = pygame.mixer.Channel(2)
+
         self.isWhiteTurn = True
         self.isMusicPaused = False
         self.isJojosPlaying = False
@@ -28,8 +30,12 @@ class PVPWindow: #Player vs Player
 
 
     def create(self):
-        pygame.mixer.music.set_volume(0.05)
-        pygame.mixer.music.play(loops= -1)
+        self.bgChannel.set_volume(0.05)
+        self.JoJoChannel.set_volume(0.05)
+        self.JoJoChannel.play(pygame.mixer.Sound('SFX/Golden Wind.mp3'))
+        self.JoJoChannel.pause()
+        self.bgChannel.play(pygame.mixer.Sound('SFX/Chess Background Music.mp3'))
+
         pieceSelected = False
         previousMX = 0
         previousMY = 0
@@ -56,7 +62,6 @@ class PVPWindow: #Player vs Player
                     mx, my = pygame.mouse.get_pos()
                     if mx < 800:  #if the click is on the chess board
                         if (self.ChessBoard.board[int(mx / 100)][int(my / 100)] != 0):
-
                             if(self.ChessBoard.board[int(mx/100)][ int(my/100)].team == 'white' and self.isWhiteTurn) or ((self.ChessBoard.board[int(mx/100)][ int(my/100)].team == 'black' and (not self.isWhiteTurn))): #if a chess piece is selected, and if the selected piece is the same team as the current turn
                                 if pieceSelected == False: #if a chess piece was not already selected
                                     pieceSelected = True
@@ -72,7 +77,6 @@ class PVPWindow: #Player vs Player
 
                         elif pieceSelected:  #if a piece is selected, and then one of its possible moves is clicked, move the peice
                             if (int(mx/100), int(my/100)) in self.ChessBoard.determinePossibleMoves(self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)], (int(previousMX/100),int(previousMY/100))):   #if a piece is currently selected and one of its avaialbe moves is clicked
-                                #print(self.states[0])
                                 self.ChessBoard.board[int(mx/100)][int(my/100)] = self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)]  #move the piece to a new spot
                                 self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)] = 0  #set the piece's old spot to empty (0)
 
@@ -98,16 +102,22 @@ class PVPWindow: #Player vs Player
                                     otherTeam = 'white'
                                 if(self.ChessBoard.isMated(tempTeam)):   #After a move is made, checks if it puts the enemy king in checkmate
                                     self.victorySFX.play()
+                                    running = False
                                     self.endGame()   #ISSUE: PRESSING QUIT IN THIS WINDOW DOESNT CLOSE THE CHESS GAME
-                                elif(self.ChessBoard.isKingInCheck(tempTeam)): #if the king is in check, switch music
-                                    pygame.mixer.music.load('SFX/Golden Wind.mp3')
-                                    pygame.mixer.music.set_volume(0.05)
-                                    pygame.mixer.music.play(loops=-1)
+                                elif(self.ChessBoard.isStaleMate(tempTeam)):
+                                    self.victorySFX.play()
+                                    running = False
+                                    self.endGame(True)
+                                elif self.ChessBoard.isKingInCheck(tempTeam) and not self.isMusicPaused: #if the king is in check, and music is not paused switch music
+                                    self.bgChannel.pause()
+                                    self.JoJoChannel.unpause()
+                                elif not self.isMusicPaused:  #resume playing background music, if king is not in check, and music is not paused
+                                    self.JoJoChannel.pause()
+                                    self.bgChannel.unpause()
+
+                                if self.ChessBoard.isKingInCheck(tempTeam):
                                     self.isJojosPlaying = True
-                                elif self.isJojosPlaying:
-                                    pygame.mixer.music.load('SFX/Chess Background Music.mp3')
-                                    pygame.mixer.music.set_volume(0.05)
-                                    pygame.mixer.music.play(loops=-1)
+                                else:
                                     self.isJojosPlaying = False
 
                         if (self.ChessBoard.board[int(mx/100)][int(my/100)] != 0) and (self.ChessBoard.board[int(previousMX/100)][int(previousMY/100)] != 0):
@@ -144,16 +154,18 @@ class PVPWindow: #Player vs Player
                                         otherTeam = 'white'
                                     if (self.ChessBoard.isMated(tempTeam)):  # After a move is made, checks if it puts the enemy king in checkmate
                                         self.victorySFX.play()
+                                        running = False
                                         self.endGame()  # ISSUE: PRESSING QUIT IN THIS WINDOW DOESNT CLOSE THE CHESS GAME
-                                    elif (self.ChessBoard.isKingInCheck(tempTeam)):  # if the king is in check, switch music
-                                        pygame.mixer.music.load('SFX/Golden Wind.mp3')
-                                        pygame.mixer.music.set_volume(0.05)
-                                        pygame.mixer.music.play(loops=-1)
+                                    elif self.ChessBoard.isKingInCheck(tempTeam) and not self.isMusicPaused:  # if the king is in check, switch music
+                                        self.bgChannel.pause()
+                                        self.JoJoChannel.unpause()
+                                    elif not self.isMusicPaused:
+                                        self.JoJoChannel.pause()
+                                        self.bgChannel.unpause()
+
+                                    if self.ChessBoard.isKingInCheck(tempTeam):
                                         self.isJojosPlaying = True
-                                    elif self.isJojosPlaying:
-                                        pygame.mixer.music.load('SFX/Chess Background Music.mp3')
-                                        pygame.mixer.music.set_volume(0.05)
-                                        pygame.mixer.music.play(loops=-1)
+                                    else:
                                         self.isJojosPlaying = False
 
                         if(self.ChessBoard.board[int(mx/100)][ int(my/100)] != 0):  #if a piece is clicked
@@ -174,12 +186,22 @@ class PVPWindow: #Player vs Player
                                 self.undoMove(gameWindow)
 
                             elif my > 225 and my < 300: #Play/Pause button pressed
-                                if self.isMusicPaused:
-                                    pygame.mixer.music.unpause()  #play music
-                                    self.isMusicPaused = False
-                                else:
-                                    pygame.mixer.music.pause()  #pause music
+                                if self.isJojosPlaying and not self.isMusicPaused: #if music is playing
+                                    self.JoJoChannel.pause()  #play music
+                                    #self.isJojosPlaying = False
                                     self.isMusicPaused = True
+                                elif not self.isMusicPaused:
+                                    self.bgChannel.pause()  #pause music
+                                    self.isMusicPaused = True
+
+                                elif self.isJojosPlaying and self.isMusicPaused:  #if music is paused
+                                    self.JoJoChannel.unpause()  #play music
+                                    #self.isJojosPlaying = False
+                                    self.isMusicPaused = False
+
+                                elif self.isMusicPaused:
+                                    self.bgChannel.unpause()
+                                    self.isMusicPaused = False
 
             if running:
                 pygame.display.update()  #update all visuals
@@ -313,7 +335,7 @@ class PVPWindow: #Player vs Player
         self.drawBoard(gameWindow)   #redraws (updates) the board
 
 
-    def endGame(self):
+    def endGame(self, isStaleMate = False):
         pygame.mixer.music.stop()
 
         sg.theme("LightGreen4")
@@ -322,6 +344,9 @@ class PVPWindow: #Player vs Player
             winner = "Black"
         else:
             winner = 'White'
+
+        if isStaleMate:
+            winner = 'Tie (Stalemate)'
 
         layout = [
             [sg.Text("Game Over!")],
@@ -337,7 +362,6 @@ class PVPWindow: #Player vs Player
 
             if event == "Exit" or event == sg.WIN_CLOSED:
                 gameOverScreen.close()
-                #pygame.display.quit()
 
                 break
 

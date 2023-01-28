@@ -495,4 +495,18 @@ class Board:
                         if self.determinePossibleMoves(self.board[i][j],(i,j)):
                             return False
 
+        if not self.isKingInCheck(team):
+            return False  #this is a stale mate
+        return True
+
+    def isStaleMate(self, team):
+        for i in range(8):
+            for j in range(8):
+                if self.board[i][j] != 0:
+                    if self.board[i][j].team == team:
+                        if self.determinePossibleMoves(self.board[i][j], (i, j)):
+                            return False
+
+        if self.isKingInCheck(team):
+            return False  # this is a stale mate
         return True
